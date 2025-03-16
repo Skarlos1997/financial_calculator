@@ -407,4 +407,4 @@ if __name__ == '__main__' :
     vida_util = 3          # 3 años de vida útil
 
     lcoe = calc_lcoe(capex, opex, energia_anual, tasa_descuento, vida_util)
-    print(f"El LCOE del proyecto es: ${lcoe:.4f} por MWh")
+    print(f"El LCOE del proyecto es: ${lcoe:.4f} por MWh") # Resultado: "El LCOE del proyecto es: $1.004 por MWh
