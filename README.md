@@ -102,3 +102,124 @@ Esta API ofrece herramientas para realizar cálculos financieros básicos, como 
 ## Uso de la Base de Datos SQLite
 
 La API utiliza una base de datos SQLite para almacenar los cálculos de interés compuesto. Cada vez que se realiza un cálculo mediante el endpoint `/interes-compuesto`, los datos (capital, tasa, plazo, monto final y ganancias) se guardan automáticamente en la base de datos. Esto permite mantener un historial de cálculos, que pueden ser actualizados o eliminados usando los endpoints `/interes-compuesto/{id}` con los métodos PUT y DELETE, respectivamente. La integración con SQLite se gestiona mediante SQLAlchemy, asegurando una conexión eficiente y persistente.
+
+
+# Ejemplos de uso de endpoints FastAPI
+
+## 1. Endpoint Principal (`/`)
+Este es un simple endpoint GET que muestra una página HTML con información sobre la calculadora financiera.
+
+```
+GET http://localhost:8000/
+```
+
+Este endpoint devuelve una página HTML simple con un título, una descripción y un enlace a la documentación.
+
+## 2. Convertir Tasas de Interés (`/convertir-tasas`)
+```
+POST http://localhost:8000/convertir-tasas
+Content-Type: application/json
+
+{
+  "tasa": 2.5,
+  "tipo": "MENSUAL"
+}
+```
+
+Respuesta esperada:
+```json
+{
+  "tasa_diaria": 0.000833,
+  "tasa_mensual": 2.5,
+  "tasa_anual": 34.49,
+  "mensaje": "Tasa mensual de 2.5% equivale a 34.49% anual"
+}
+```
+
+## 3. Cálculo de Interés Compuesto (`/interes-compuesto`)
+```
+POST http://localhost:8000/interes-compuesto
+Content-Type: application/json
+
+{
+  "capital": 10000,
+  "tasa": 2.5,
+  "plazo": 12,
+  "tipo_tasa": "MENSUAL"
+}
+```
+
+Respuesta esperada:
+```json
+{
+  "capital_inicial": "$10,000.00",
+  "tasa_aplicada": "2.5% mensual",
+  "tasa_anual_equivalente": "34.49%",
+  "plazo": "12 periodos (mensual)",
+  "monto_final": "$13,448.52",
+  "ganancias": "$3,448.52"
+}
+```
+
+## 4. Cálculo del Costo Nivelado de Energía (LCOE) (`/lcoe`)
+```
+POST http://localhost:8000/lcoe
+Content-Type: application/json
+
+{
+  "capex": 1000000,
+  "opex": 50000,
+  "produccion_anual": 5000,
+  "tasa_descuento": 0.08,
+  "vida_util": 25
+}
+```
+
+Respuesta esperada:
+```json
+{
+  "lcoe": 42.47,
+  "unidad": "$/MWh",
+  "mensaje": "El costo nivelado de la energía es 42.47 $/MWh"
+}
+```
+
+## 5. Actualizar Cálculo de Interés Compuesto (`/interes-compuesto/{id}`)
+```
+PUT http://localhost:8000/interes-compuesto/1
+Content-Type: application/json
+
+{
+  "capital": 15000,
+  "tasa": 2.0,
+  "plazo": 24,
+  "tipo_tasa": "MENSUAL"
+}
+```
+
+Respuesta esperada:
+```json
+{
+  "mensaje": "Cálculo actualizado",
+  "datos": {
+    "id": 1,
+    "capital": 15000,
+    "tasa": 2.0,
+    "plazo": 24,
+    "monto_final": 23246.52,
+    "ganancias": 8246.52
+  }
+}
+```
+
+## 6. Eliminar Cálculo de Interés Compuesto (`/interes-compuesto/{id}`)
+```
+DELETE http://localhost:8000/interes-compuesto/1
+```
+
+Respuesta esperada:
+```json
+{
+  "mensaje": "Cálculo con ID 1 eliminado correctamente"
+}
+```
