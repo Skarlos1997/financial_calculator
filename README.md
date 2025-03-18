@@ -99,6 +99,34 @@ Esta API ofrece herramientas para realizar cálculos financieros básicos, como 
 
 ---
 
+## Endpoint Actualizar Cálculo del Costo Nivelado de la Energía (LCOE)
+
+- **Ruta**: `/lcoe/{id}`
+- **Método**: PUT
+- **Descripción**: Actualiza un cálculo de LCOE existente en la base de datos SQLite.
+- **Parámetros**:
+  - `id: int` - Identificador del cálculo a actualizar.
+  - `request: LCOERequest` - Objeto con los nuevos valores (capex, opex, produccion_anual, tasa_descuento, vida_util).
+  - `db: Session` - Sesión de la base de datos para realizar la actualización.
+- **Respuesta**: Un diccionario con:
+  - `mensaje: str` - Confirmación de la actualización.
+  - `datos: object` - Datos actualizados del cálculo.
+
+---
+
+## Endpoint Eliminar Cálculo de Interés Compuesto
+
+- **Ruta**: `/lcoe/{id}`
+- **Método**: DELETE
+- **Descripción**: Elimina un cálculo de LCOE de la base de datos SQLite.
+- **Parámetros**:
+  - `id: int` - Identificador del cálculo a eliminar.
+  - `db: Session` - Sesión de la base de datos para realizar la eliminación.
+- **Respuesta**: Un diccionario con:
+  - `mensaje: str` - Confirmación de la eliminación (ej. "Cálculo con ID 1 eliminado correctamente").
+
+---
+
 ## Uso de la Base de Datos SQLite
 
 La API utiliza una base de datos SQLite para almacenar los cálculos de interés compuesto. Cada vez que se realiza un cálculo mediante el endpoint `/interes-compuesto`, los datos (capital, tasa, plazo, monto final y ganancias) se guardan automáticamente en la base de datos. Esto permite mantener un historial de cálculos, que pueden ser actualizados o eliminados usando los endpoints `/interes-compuesto/{id}` con los métodos PUT y DELETE, respectivamente. La integración con SQLite se gestiona mediante SQLAlchemy, asegurando una conexión eficiente y persistente.
@@ -221,5 +249,37 @@ Respuesta esperada:
 ```json
 {
   "mensaje": "Cálculo con ID 1 eliminado correctamente"
+}
+```
+
+## 7. Actualizar calculo del Costo Nivelado de Energía (LCOE) (`/lcoe/{id}`)
+
+```
+PUT http://localhost:8000/lcoe/1
+```
+Respuesta esperada:
+```json
+{
+    "mensaje": "LCOE actualizado", 
+    "datos": {
+        "id": 1,
+        "capex": 0.12,
+        "opex": 1000,
+        "produccion_anual": 120,
+        "tasa_total": 0.12,
+        "vida_util": 25 
+        }
+}
+```
+
+## 8. Eliminar cálculo del Costo Nivelado de Energía (LCOE) (`/lcoe/{id}`)
+
+```
+DELETE http://localhost:8000/lcoe/1
+
+Respuesta esperada:
+```json
+{
+    "mensaje": "LCOE con ID 1 eliminado correctamente"
 }
 ```
