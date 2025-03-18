@@ -1,5 +1,16 @@
 from pydantic import BaseModel, Field
 from enum import Enum
+from sqlalchemy import Column, Integer, Float
+from database import Base
+
+class InteresCompuestoDB(Base):
+    __tablename__ = "interes_compuesto"
+    id = Column(Integer, primary_key=True, index=True)
+    capital = Column(Float, nullable=False)
+    tasa = Column(Float, nullable=False)
+    plazo = Column(Integer, nullable=False)
+    monto_final = Column(Float, nullable=False)
+    ganancias = Column(Float, nullable=False)
 
 # Modelos de datos para la conversión de tasas
 class TipoTasa(str, Enum):

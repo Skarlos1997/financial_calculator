@@ -1,12 +1,22 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from enum import Enum
+from sqlalchemy.orm import Session
 from calc_int_compu import *
+from database import SessionLocal
 from models import *
 
 app = FastAPI(title="Calculadora Financiera API", 
               description="API para realizar cálculos financieros")
+
+# Función para obtener la sesión de la BD
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # Endpoint ventana principal
 @app.get("/")
@@ -46,7 +56,7 @@ def calcular_interes(request: ConversionTasaRequest):
 
 # Enpoint Calculo de interes compuesto
 @app.post("/interes-compuesto")
-def calcular_interes_compuesto(request: InteresCompuestoRequest):
+def calcular_interes_compuesto(request: InteresCompuestoRequest, db: Session = Depends(get_db)):
     capital = request.capital
     tasa = request.tasa
     plazo = request.plazo
@@ -74,6 +84,12 @@ def calcular_interes_compuesto(request: InteresCompuestoRequest):
     
     ganancias = monto_final - capital
 
+    # Guardar en la base de datos
+    nuevo_calculo = InteresCompuestoDB(capital=capital, tasa=tasa, plazo=plazo, monto_final=monto_final, ganancias=ganancias)
+    db.add(nuevo_calculo)
+    db.commit()
+    db.refresh(nuevo_calculo)
+
     return {
         "capital_inicial": format_currency(capital),
         "tasa_aplicada": f"{tasa}% {tipo_tasa.value}",
@@ -98,3 +114,30 @@ def calcular_lcoe(request: LCOERequest):
         "unidad": "$/MWh",
         "mensaje": f"El costo nivelado de la energía es {round(lcoe, 2)} $/MWh"
     }
+
+@app.put("/interes-compuesto/{id}")
+def actualizar_calculo(id: int, request: InteresCompuestoRequest, db: Session = Depends(get_db)):
+    calculo = db.query(InteresCompuestoDB).filter(InteresCompuestoDB.id == id).first()
+    if not calculo:
+        return {"error": "Cálculo no encontrado"}
+
+    # Actualizar valores
+    calculo.capital = request.capital
+    calculo.tasa = request.tasa
+    calculo.plazo = request.plazo
+    calculo.monto_final = calc_interes(request.capital, request.tasa, request.plazo)
+    calculo.ganancias = calculo.monto_final - request.capital
+
+    db.commit()
+    db.refresh(calculo)
+    return {"mensaje": "Cálculo actualizado", "datos": calculo}
+
+@app.delete("/interes-compuesto/{id}")
+def eliminar_calculo(id: int, db: Session = Depends(get_db)):
+    calculo = db.query(InteresCompuestoDB).filter(InteresCompuestoDB.id == id).first()
+    if not calculo:
+        return {"error": "Cálculo no encontrado"}
+
+    db.delete(calculo)
+    db.commit()
+    return {"mensaje": f"Cálculo con ID {id} eliminado correctamente"}
