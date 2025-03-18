@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 from enum import Enum
 from sqlalchemy.orm import Session
 from calc_int_compu import *
-from database import SessionLocal
+from database import SessionLocal, Base, engine
 from models import *
 
 app = FastAPI(title="Calculadora Financiera API", 
@@ -17,6 +17,8 @@ def get_db():
         yield db
     finally:
         db.close()
+
+Base.metadata.create_all(bind=engine)
 
 # Endpoint ventana principal
 @app.get("/")
@@ -101,7 +103,7 @@ def calcular_interes_compuesto(request: InteresCompuestoRequest, db: Session = D
 
 # Endpoint para calcular el costo nivelado de la energía (LCOE)
 @app.post("/lcoe")
-def calcular_lcoe(request: LCOERequest):
+def calcular_lcoe(request: LCOERequest, db: Session = Depends(get_db)):
     capex = request.capex
     opex = request.opex
     produccion_anual = request.produccion_anual
@@ -109,6 +111,18 @@ def calcular_lcoe(request: LCOERequest):
     vida_util = request.vida_util
     # Calculo del LCOE
     lcoe = calc_lcoe(capex, opex, produccion_anual, tasa_descuento, vida_util)
+
+    # Guardar en la base de datos
+    nuevo_calculo = LCOEDB(
+        capex=capex, opex=opex,
+        produccion_anual=produccion_anual, tasa_descuento=tasa_descuento,
+        vida_util=vida_util
+    )
+
+    db.add(nuevo_calculo)
+    db.commit()
+    db.refresh(nuevo_calculo)
+
     return {
         "lcoe": round(lcoe, 2),
         "unidad": "$/MWh",
