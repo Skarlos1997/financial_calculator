@@ -115,6 +115,8 @@ def calcular_lcoe(request: LCOERequest):
         "mensaje": f"El costo nivelado de la energía es {round(lcoe, 2)} $/MWh"
     }
 
+# Endpoints para actualizar y eliminar datos de la base de datos para el calculo de interes compuesto
+
 @app.put("/interes-compuesto/{id}")
 def actualizar_calculo(id: int, request: InteresCompuestoRequest, db: Session = Depends(get_db)):
     calculo = db.query(InteresCompuestoDB).filter(InteresCompuestoDB.id == id).first()
@@ -141,3 +143,32 @@ def eliminar_calculo(id: int, db: Session = Depends(get_db)):
     db.delete(calculo)
     db.commit()
     return {"mensaje": f"Cálculo con ID {id} eliminado correctamente"}
+
+# Endpoints para actualizar y eliminar datos del calculo de LCOE
+
+@app.put("/lcoe/{id}")
+def actualizar_lcoe(id: int, request: LCOERequest, db: Session = Depends(get_db)):
+    lcoe = db.query(LCOEDB).filter(LCOEDB.id == id).first()
+    if not lcoe:
+        return {"error": "LCOE no encontrado"}
+    
+    # Actualizando los valores
+    lcoe.capex = request.capex
+    lcoe.opex = request.opex
+    lcoe.produccion_anual = request.produccion_anual
+    lcoe.tasa_descuento = request.tasa_descuento
+    lcoe.vida_util = request.vida_util
+
+    db.commit()
+    db.refresh(lcoe)
+    return {"mensaje": "LCOE actualizado", "datos": lcoe}
+
+@app.delete("/lcoe/{id}")
+def eliminar_lcoe(id: int, db: Session = Depends(get_db)):
+    lcoe = db.query(LCOEDB).filter(LCOEDB.id == id).filter(LCOEDB.id == id).first()
+    if not lcoe:
+        return {"error": "LCOE no encontrado"}
+    
+    db.delete(lcoe)
+    db.commit()
+    return {"mensaje": f"LCOE con ID {id} eliminado correctamente"}
