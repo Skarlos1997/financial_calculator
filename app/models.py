@@ -4,6 +4,7 @@ from sqlalchemy import Column, Integer, Float
 from database import Base
 
 class InteresCompuestoDB(Base):
+    # Modelo de datos para el cálculo de interés compuesto
     __tablename__ = "interes_compuesto"
     id = Column(Integer, primary_key=True, index=True)
     capital = Column(Float, nullable=False)
@@ -11,6 +12,16 @@ class InteresCompuestoDB(Base):
     plazo = Column(Integer, nullable=False)
     monto_final = Column(Float, nullable=False)
     ganancias = Column(Float, nullable=False)
+
+class LCOEDB(Base):
+    # Modelo de datos para el cálculo del costo nivelado de la energía (LCOE)
+    __tablename__ = "costo_nivelado_energia"
+    id = Column(Integer, primary_key=True, index=True)
+    capex = Column(Float, nullable=False)
+    opex = Column(Float, nullable=False)
+    produccion_anual = Column(Float, nullable=False)
+    tasa_descuento = Column(Float, nullable=False)
+    vida_util = Column(Integer, nullable=False)
 
 # Modelos de datos para la conversión de tasas
 class TipoTasa(str, Enum):
