@@ -1,4 +1,9 @@
+dash==3.0.0
+numpy==2.0.1
+pandas==2.2.2
+uvicorn==0.34.0
+pydantic==2.10.6
 fastapi==0.115.8
 SQLAlchemy==2.0.38
-pydantic==2.10.6
-uvicorn==0.34.0
+plotly[express]==6.0.1
+dash-bootstrap-components==2.0.0

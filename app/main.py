@@ -124,7 +124,7 @@ def calcular_lcoe(request: LCOERequest, db: Session = Depends(get_db)):
     db.refresh(nuevo_calculo)
 
     return {
-        "lcoe": round(lcoe, 2),
+        "lcoe": round(lcoe, 4),
         "unidad": "$/MWh",
         "mensaje": f"El costo nivelado de la energía es {round(lcoe, 2)} $/MWh"
     }
