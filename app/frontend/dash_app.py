@@ -6,7 +6,7 @@ import pandas as pd  # Para manipulación de datos
 import numpy as np  # Para operaciones numéricas
 import dash_bootstrap_components as dbc  # Bootstrap components para mejorar la interfaz
 # Importa las funciones de layouts y callbacks
-from layouts import get_inicio_layout, get_lcoe_layout, get_interes_compuesto_layout, get_conversion_tasa_layout, register_all_callbacks
+from layouts import get_inicio_layout, get_lcoe_layout, get_interes_compuesto_layout, get_conversion_tasa_layout, get_historial_lcoe_layout, get_historial_interes_compuesto_layout,register_all_callbacks
 
 # ==============================================================================
 # Inicializar la aplicación Dash con un tema de Bootstrap
@@ -14,7 +14,7 @@ from layouts import get_inicio_layout, get_lcoe_layout, get_interes_compuesto_la
 app = dash.Dash(
     __name__,
     suppress_callback_exceptions=True,
-    external_stylesheets=[dbc.themes.FLATLY]  # Usar el tema Bootstrap estándar
+    external_stylesheets=[dbc.themes.FLATLY]
 )
 
 register_all_callbacks(app)
@@ -26,6 +26,8 @@ inicio_layout = get_inicio_layout()
 lcoe_layout = get_lcoe_layout()
 interes_compuesto_layout = get_interes_compuesto_layout()
 conversion_tasa_layout = get_conversion_tasa_layout()
+historial_lcoe_layout = get_historial_lcoe_layout()
+historial_interes_compuesto_layout = get_historial_interes_compuesto_layout()
 
 # ------------------------------------------------------------------------------
 # URLs de imagenes externas
@@ -61,7 +63,19 @@ app.layout = html.Div(
                         dbc.NavItem(dbc.NavLink("Interés Compuesto", href="/interes-compuesto", active="exact"), id = "nav-interes-compuesto"),
                         dbc.Tooltip("Ir a la página de interés compuesto",target = "nav-interes-compuesto"),
                         dbc.NavItem(dbc.NavLink("Conversión Tasa de Interes", href="/conversion_tasa", active="exact"), id = "nav-conversion-tasa"),
-                        dbc.Tooltip("Ir a la página de conversión tasa de interés",target = "nav-conversion-tasa")
+                        dbc.Tooltip("Ir a la página de conversión tasa de interés",target = "nav-conversion-tasa"),
+                        dbc.DropdownMenu(
+                            label = "Historial",
+                            nav = True, # indicando que es un componente del Nav
+                            in_navbar = True, # indicando que se encuentra en la barra de navegación
+                            align_end=True,
+                            children = [
+                                dbc.DropdownMenuItem("Hisotial de LCOE", href = "/historial-lcoe"),
+                                dbc.DropdownMenuItem("Historial de Interés Compuesto", href = "/historial-interes-compuesto")
+                            ],
+                            id = "nav-historial",
+                        ),
+                        dbc.Tooltip("Ir a la página de historial",target = "nav-historial")
                     ],
                     style={"fontFamily": "Arial"}
                 ),
@@ -125,6 +139,10 @@ def render_page_content(pathname):
         return interes_compuesto_layout
     elif  pathname == "/conversion_tasa":
         return conversion_tasa_layout
+    elif pathname == "/historial-lcoe":
+        return historial_lcoe_layout
+    elif pathname == "/historial-interes-compuesto":
+        return historial_interes_compuesto_layout
     else:
         return dbc.Alert("Página no encontrada.", color="danger")
 

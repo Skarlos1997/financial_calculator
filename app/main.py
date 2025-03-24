@@ -31,6 +31,16 @@ def inicio():
                 """
     return HTMLResponse(content=contenido)
 
+# Endpoint para acceder a la tabla costo_nivelado_energia (LCOEDB) de la base de datos
+@app.get("/lcoe-data")
+def lcoe_data(db: Session = Depends(get_db)):
+    return db.query(LCOEDB).all()
+
+# Endpoint para acceder a la tabla interes_compuesto (InteresCompuestoDB) de la base de datos
+@app.get("/interes-compuesto-data")
+def interest_compound_data(db: Session = Depends(get_db)):
+    return db.query(InteresCompuestoDB).all()
+
 # Endpoin calculo de conversor de tasa de interes
 @app.post("/convertir-tasas")
 def calcular_interes(request: ConversionTasaRequest):

@@ -1,5 +1,6 @@
 import dash
 import requests
+import pandas as pd
 from dash import html, dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
@@ -186,6 +187,39 @@ def get_conversion_tasa_layout():
         ], style={"backgroundColor": "#f8f9fa", "padding": "20px", "borderRadius": "5px"})
     ], fluid=True, className="d-flex justify-content-center")
 
+def get_historial_lcoe_layout():
+    return dbc.Container([
+        dbc.Row(
+            dbc.Col(
+                dbc.Card([
+                    dbc.CardHeader("Historial de LCOE", className = "h3"),
+                    dbc.CardBody([
+                        html.P("Lista de registro de cálculos de LCOE"),
+                        html.Div(id = "tabla-lcoe")
+                    ])
+                ], className="mt-4"),
+                width=12
+            ),
+            justify = "center"
+        )
+    ], fluid = True)
+
+def get_historial_interes_compuesto_layout():
+    return dbc.Container([
+        dbc.Row(
+            dbc.Col(
+                dbc.Card([
+                    dbc.CardHeader("Historial de interes compuesto", className = "h3"),
+                    dbc.CardBody([
+                        html.P("Lista de registro de cálculos de interes compuesto"),
+                        html.Div(id = "tabla-ic")
+                    ])
+                ], className="mt-4"),
+                width=12
+            ),
+            justify = "center"
+        )
+    ], fluid = True)
 
 # ------------------------------------------------------------------------------
 # Callbacks
@@ -295,7 +329,7 @@ def register_lcoe_callbacks(app):
                     "vida_util": float(project_life)
                 }
                 try:
-                    response = requests.post("http://127.0.0.1:8000/lcoe", json=payload)
+                    response = requests.post(url_base + "/lcoe", json=payload)
                     if response.status_code == 200:
                         data = response.json()
                         return html.Div([
@@ -307,9 +341,96 @@ def register_lcoe_callbacks(app):
                 except Exception as e:
                     return f"Error al conectar con el backend: {str(e)}", True
         return "Ingresa los datos y presiona 'Calcular LCOE'", False
+    
+def register_historial_lcoe_callbacks(app):
+    @app.callback(
+        Output("tabla-lcoe", "children"),
+        [Input("url", "pathname")],
+    )
+    def obtener_historial_lcoe(pathname):
+        # Solo se cargará la tabla se estamos en /historial-lcoe
+        if pathname == "/historial-lcoe":
+            try:
+                response = requests.get(url_base + "/lcoe-data")
+                if response.status_code == 200:
+                    data = response.json()
+                    if not data:
+                        return html.P("No hay registros de LCOE en la base de datos.")
+                    
+                    # Convirtiendo el json en DataFrame
+                    historial_lcoe_df = pd.DataFrame(data)
+
+                    # Construyendo la tabla
+                    table_header = [
+                        html.Thead(html.Tr([html.Th(col) for col in historial_lcoe_df.columns]))
+                    ]
+                    table_body = []
+                    for _, row in historial_lcoe_df.iterrows():
+                        table_body.append(
+                        html.Tr([
+                            html.Td(row[col]) for col in historial_lcoe_df.columns
+                        ])
+                    )
+                    table = dbc.Table(table_header + [html.Tbody(table_body)],
+                                  bordered=True, 
+                                  hover=True,
+                                  responsive=True)
+                    return table
+                else:
+                    return dbc.Alert("Error al cargar registros LCOE", color="danger")
+            except Exception as e:
+                return dbc.Alert("Error al conectar con el backend: " + str(e), color="danger")
+        # En caso de no encontrar la ruta /historial-lcoe, se devuelve un mensaje
+        return html.P("No se encontró la ruta /historial-lcoe")
+
+def register_historial_interes_compuesto_callbacks(app):
+    @app.callback(
+        Output("tabla-ic", "children"),
+        [Input("url", "pathname")]
+    )
+    def obtener_historial_interes_compuesto(pathname):
+        # Solo se cargará la tabla se estamos en /historial-interes-compuesto
+        if pathname == "/historial-interes-compuesto":
+            try:
+                response = requests.get(url_base + "/interes-compuesto-data")
+                if response.status_code == 200:
+                    data = response.json()
+                    if not data:
+                        return html.P("No hay registros de Interés Compuesto en la base de datos.")
+                    
+                    # Convirtiendo el json en DataFrame
+                    historial_ic_df = pd.DataFrame(data)
+
+                    # Contruyendo la tabla
+                    table_header = [
+                        html.Thead(html.Tr([html.Th(col) for col in historial_ic_df.columns]))
+                    ]
+                    table_body = []
+                    for _, row in historial_ic_df.iterrows():
+                        table_body.append(
+                            html.Tr([
+                                html.Td(row[col]) for col in historial_ic_df.columns
+                            ])
+                        )
+                    table = dbc.Table(table_header + [html.Tbody(table_body)],
+                                      bordered=True,
+                                      hover=True,
+                                      responsive=True)
+                    return table
+                else:
+                    return dbc.Alert("Error al cargar registros Interés Compuesto", color="danger")
+            except Exception as e:
+                return dbc.Alert("Error al conectar con el backend: " + str(e), color="danger")
+            
+        # Si no esta la ruta /historial-interes-compuesto, se devuelve un mensaje
+        return html.P("No se encontró la ruta /historial-interes-compuesto")
+                        
+
 
 # Función para registrar todos los callbacks
 def register_all_callbacks(app):
     register_conversion_tasa_callbacks(app)
     register_interes_compuesto_callbacks(app)
     register_lcoe_callbacks(app)
+    register_historial_lcoe_callbacks(app)
+    register_historial_interes_compuesto_callbacks(app)
