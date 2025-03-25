@@ -13,56 +13,82 @@ url_base = "http://127.0.0.1:8000"
 # ------------------------------------------------------------------------------
 
 def get_inicio_layout():
-    return html.Div([
-        html.H1("Calculadora Financiera", style={"textAlign": "center", "fontSize": "2.5em", "marginBottom": "20px"}),
-        html.P("Bienvenido a la herramienta financiera. Selecciona una opción en el menú.", style={"color": "#555", "fontSize": "1.2em", "textAlign": "center"})
-    ])
+    return dbc.Container([
+        # Título principal
+        html.H1("Calculadora Financiera", style={"textAlign": "center", "fontSize": "3em", "marginBottom": "10px", "color": "#343a40"}),
+        html.P("Nos alegra tenerte aquí. Esta herramienta te permitirá estimar, comparar y planificar diferentes escenarios de inversión y costos energéticos de manera rápida y sencilla. Selecciona una de las opciones del menú para comenzar.", style={"color": "#6c757d", "fontSize": "1.2em", "textAlign": "justify", "marginBottom": "40px"}),
+        html.Hr(style={"borderColor": "#dee2e6", "margin": "0 auto", "width": "50%"}),
+
+        # Sección de descripción
+        html.Div([
+            html.H2("¿Qué es esta herramienta?", style={"color": "#495057", "fontSize": "1.5em", "textAlign": "center", "marginTop": "30px"}),
+            html.P("Nuestra aplicación te ayuda a estimar costos energéticos (LCOE), calcular interés compuesto y convertir tasas de interés, de manera rápida y precisa.", style={"color": "#6c757d", "fontSize": "1.2em", "textAlign": "justify", "marginBottom": "40px"})
+        ]),
+
+        # Sección de llamada a la acción
+        html.Div([
+            html.H3("Empieza ahora", style={"color": "#495057", "fontSize": "1.3em", "textAlign": "center", "marginTop": "30px"}),
+            html.P("Da el primer paso hacia tu futuro financiero: elige una opción y comienza a calcular.", style={"color": "#6c757d", "fontSize": "1.1em", "textAlign": "justify"}),
+            dbc.Row(
+                [
+                    dbc.Col(dbc.Button("Calcular LCOE", color="primary", href="/lcoe"), width="auto"),
+                    dbc.Col(dbc.Button("Interés Compuesto", color="success", href="/interes-compuesto"), width="auto"),
+                    dbc.Col(dbc.Button("Convertir Tasas", color="info", href="/conversion-tasa"), width="auto"),
+                ],
+                justify="center",
+                className="mt-3"
+            )
+        ])
+    ], fluid=True, style={"padding": "40px 20px", "backgroundColor": "#f8f9fa", "borderRadius": "10px", "boxShadow": "0 4px 8px rgba(0, 0, 0, 0.1)"})
 
 def get_lcoe_layout():
     return dbc.Container([
     html.Div([
-        html.H1("Cálculo de LCOE"),
-        html.P("Ingresa los datos para calcular el costo nivelado de energía para tu proyecto."),
+        html.H1("Cálculo de LCOE", style={"textAlign": "center", "fontSize": "2.5em", "color": "#343a40"}),
+        html.P("Ingresa los datos para calcular el costo nivelado de energía para tu proyecto.", style={"textAlign": "center", "fontSize": "1.2em", "color": "#6c757d", "marginBottom": "20px"}),
+        html.Hr(),
 
     # Formulario con grid responsivo
     dbc.Form([
         dbc.Row([
             dbc.Col([
                 html.Label("CAPEX: ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
-                dcc.Input(id="input-capex", type="number", value=0),
+                dcc.Input(id="input-capex", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
                 dbc.Tooltip("Incluye costos de adquisición de terrenos, equipos, construcción, ingeniería y otros gastos relacionados con la puesta en marcha del proyecto.", target="input-capex"),
             ], md=6),
             dbc.Col([
                 html.Label("OPEX: ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
-                dcc.Input(id="input-opex", type="number", value=0),
+                dcc.Input(id="input-opex", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
                 dbc.Tooltip("Incluye costos de combustible, personal, mantenimiento, seguros, impuestos y otros gastos recurrentes.", target="input-opex"),
             ], md=6),
-        ], className="mb-3"),
+        ], className="mb-4"),
         dbc.Row([
             dbc.Col([
                 html.Label("Producción anual (MWh): ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
-                dcc.Input(id="input-annual-production", type="number", value=0),
+                dcc.Input(id="input-annual-production", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
                 dbc.Tooltip("Es la cantidad de energía eléctrica que la planta genera en un año, medida en megavatios hora.", target="input-annual-production"),
             ], md=6),
             dbc.Col([
                 html.Label("Tasa de descuento: ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
-                dcc.Input(id="input-discount-rate", type="number", value=0),
+                dcc.Input(id="input-discount-rate", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
                 dbc.Tooltip("Representa el costo de oportunidad del capital y refleja el riesgo del proyecto.", target="input-discount-rate"),
             ], md=6),
-        ], className="mb-3"),
+        ], className="mb-4"),
         dbc.Row([
             dbc.Col([
                 html.Label("Plazo de vida de la planta en años: ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
-                dcc.Input(id="input-project-life", type="number", value=0),
+                dcc.Input(id="input-project-life", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
                 dbc.Tooltip("Es el período de tiempo durante el cual se espera que la planta genere energía de manera eficiente.", target="input-project-life"),
             ], md=6),
-        ], className="mb-3"),
+        ], className="mb-4"),
         dbc.Row([
             dbc.Col([
-                dbc.Button([html.I(className="fas fa-calculator"), " Calcular LCOE"], id="button-lcoe", n_clicks = 0,size="lg", color="primary", className="mt-3"),
-                # html.Button('Reiniciar', id='button-reset', n_clicks=0, style={"marginLeft": "10px"}),
+                # Boton para calcular el lcoe
+                dbc.Button([html.I(className="fas fa-calculator"), "Calcular LCOE"], id="button-lcoe", n_clicks = 0, size="lg", color="outline-primary", className="mt-3 me-3"),
+                # Boton para limpiar todos los campos
+                dbc.Button([html.I(className="fas fa-calculator"), "Reiniciar"], id = "button-reset-lcoe", n_clicks = 0, size="lg", color="outline-secondary", className="mt-3"),
             ], md=12),
-        ], className="mb-3"),
+        ], className="mb-4"),
     ]),
     # Sección de resultados
     html.Div([
@@ -74,39 +100,40 @@ def get_lcoe_layout():
             children=html.Div(id="output-lcoe")
             )
         ])
-    ], style={"backgroundColor": "#f8f9fa", "padding": "20px", "borderRadius": "5px"})
+    ], style={"backgroundColor": "#f1f3f5", "padding": "15px", "borderRadius": "5px", "marginBottom": "20px"})
 ], fluid=True, className="d-flex justify-content-center")
 
 def get_interes_compuesto_layout():
     return dbc.Container([
         html.Div([
             # Sección de encabezado
-            html.H1("Cálculo de Interés Compuesto"),
-            html.P("Calcula el valor futuro de tu inversión."),
+            html.H1("Cálculo de Interés Compuesto", style={"textAlign": "center", "fontSize": "2.5em", "marginBottom": "20px", "color": "#343a40"}),
+            html.P("Calcula el valor futuro de tu inversión.", style={"textAlign": "center", "fontSize": "1.2em", "color": "#6c757d", "marginBottom": "30px"}),
+            html.Hr(),
             dbc.Form([
                 dbc.Row([
                     dbc.Col([
-                        html.Label("Capital inicial: "),
-                        dcc.Input(id = "input-capital", type = "number", value=0),
+                        html.Label("Capital inicial: ", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
+                        dcc.Input(id = "input-capital", type = "number", value=0, className="form-control", style={"borderRadius": "5px"}),
                         dbc.Tooltip("Es la cantidad de dinero que inviertes o depositas al principio.",target = "input-capital"),
                     ], md = 6),
 
                     dbc.Col([
-                        html.Label("Tasa de interés: "),
-                        dcc.Input(id = "input-tasa-interes", type = "number", value=0),
+                        html.Label("Tasa de interés: ", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
+                        dcc.Input(id = "input-tasa-interes", type = "number", value=0, className="form-control", style={"borderRadius": "5px"}),
                         dbc.Tooltip("Es el porcentaje que te pagan por tu dinero durante un período de tiempo.",target = "input-tasa-interes"),
                     ], md = 6),
-                ], className="mb-3"),
+                ], className="mb-4"),
 
                 dbc.Row([
                     dbc.Col([
-                        html.Label("Plazo en periodos (años o meses o días): "),
-                        dcc.Input(id = "input-plazo", type = "number", value=0),
+                        html.Label("Plazo en periodos (años o meses o días): ", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
+                        dcc.Input(id = "input-plazo", type = "number", value=0, className="form-control", style={"borderRadius": "5px"}),
                         dbc.Tooltip("Es el tiempo que dejas tu dinero invertido.",target = "input-plazo"),
                     ], md = 6),
 
                     dbc.Col([
-                        html.Label("Tipo de tasa (diaria, mensual o anual)"),
+                        html.Label("Tipo de tasa (diaria, mensual o anual)", className="form-label", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
                         dcc.Dropdown(
                             id = "dropdown-interes-compuesto", 
                             options = [
@@ -115,17 +142,23 @@ def get_interes_compuesto_layout():
                                 {"label": "DIARIO", "value": "diario"}
                             ],
                         placeholder = "Selecciona el tipo de tasa",
-                        style={"width": "200px"}
+                        className="custom-dropdown",  # You can define custom CSS
+                        style={
+                            'width': '100%',
+                            'border-radius': '0.25rem',
+                            'border': '1px solid #ced4da'
+                        }
                         ),
                         dbc.Tooltip("Indica con qué frecuencia se añade el interés a tu capital, y esto afecta a la rapidez con la que crece tu dinero.",target = "dropdown-interes-compuesto"),
-                    ], md = 6),
-                ], className = "mb-3"),
+                    ], md = 6, className="form-group"),
+                ], className = "mb-4"),
 
                 dbc.Row([
                     dbc.Col([
-                        dbc.Button([html.I(className="fas fa-calculator"), "Calcular"], id="button-interes-compuesto", n_clicks = 0, size="lg", color="primary", className="mt-3"),
+                        dbc.Button([html.I(className="fas fa-calculator"), "Calcular"], id="button-interes-compuesto", n_clicks = 0, size="lg", color="outline-primary", className="mt-3 me-3"),
+                        dbc.Button([html.I(className="fas fa-calculator"), "Reiniciar"], id = "button-reset-ic", n_clicks = 0, size="lg", color="outline-secondary", className="mt-3"),
                     ], md = 12)
-                ], className="mb-3"),
+                ], className="mb-4"),
             ]),
 
             html.Div([
@@ -144,17 +177,18 @@ def get_conversion_tasa_layout():
     return dbc.Container([
         html.Div([
             # Sección de encabezados
-            html.H1("Conversor de Tasas de Interés"),
-            html.P("Convierte entre diferentes tipos de tasas de interés."),
+            html.H1("Conversor de Tasas de Interés", style={"textAlign": "center", "fontSize": "2.5em", "color": "#343a40"}),
+            html.P("Convierte entre diferentes tipos de tasas de interés.", style={"textAlign": "center", "fontSize": "1.2em", "color": "#6c757d", "marginBottom": "20px"}),
+            html.Hr(),
             
             dbc.Row([
                 dbc.Col([
-                    html.Label("Tasa (%)"),
-                    dcc.Input(id = "input-tasa", type = "number", placeholder = "Ingresa la tasa", debounce = True),
+                    html.Label("Tasa (%)", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
+                    dcc.Input(id = "input-tasa", type = "number", placeholder = "Ingresa la tasa", debounce = True, className="form-control", style={"borderRadius": "5px"}),
                     dbc.Tooltip("""Representa el "precio" del dinero, es decir, lo que se paga por usarlo (si pides un préstamo) o lo que se gana por prestarlo o invertirlo (si tienes un depósito o inversión).""",target = "input-tasa"),
                 ],md = 6),
                 dbc.Col([
-                    html.Label("Tipo de tasa"),
+                    html.Label("Tipo de tasa", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
                     dcc.Dropdown(
                         id="dropdown",
                         options=[
@@ -163,15 +197,21 @@ def get_conversion_tasa_layout():
                             {"label": "DIARIO", "value": "diario"}
                         ],
                         placeholder="Selecciona el tipo de tasa",
-                        style={"width": "200px"}
+                        className = "custom-dropdown", 
+                        style={
+                            'width': '100%',
+                            "borderRadius": "5px",
+                            'border': '1px solid #ced4da'
+                        }
                     ),
                     dbc.Tooltip("Se refiere a la frecuencia con la que se calcula y aplica el interés a tu capital.",target = "dropdown"),
-                ])
-            ], className = "mb-3"),
+                ],md = 6, className="form-group")
+            ], className = "mb-4"),
 
             dbc.Row([
                 dbc.Col([
-                    dbc.Button([html.I(className="fas fa-calculator"), "Convierte"], id="btn-convertir", n_clicks=0, size="lg", color="primary", className="mt-3")
+                    dbc.Button([html.I(className="fas fa-calculator"), "Convierte"], id="btn-convertir", n_clicks=0, size="lg", color="outline-primary", className="mt-3 me-3"),
+                    dbc.Button([html.I(className="fas fa-undo"), "Reiniciar"], id = "button-reset-ct", n_clicks = 0, size="lg", color="outline-secondary", className="mt-3"),
                 ], md = 6)
             ], className = "mb-3"),
 
@@ -227,99 +267,144 @@ def get_historial_interes_compuesto_layout():
 
 def register_conversion_tasa_callbacks(app):
     @app.callback(
-        Output("output-ct", "children"),
-        [Input("btn-convertir", "n_clicks")],
+        [Output("output-ct", "children"),
+         Output("error-alert-ct", "is_open"),
+         Output("input-tasa", "value"),
+         Output("dropdown", "value")],
+        [Input("btn-convertir", "n_clicks"),
+         Input("button-reset-ct", "n_clicks")],
         [State("input-tasa", "value"),
          State("dropdown", "value")]
     )
-    def convertir_tasas(n_clicks, tasa, tipo):
-        # print(f"Callback ejecutado con n_clicks={n_clicks}, tasa={tasa}, tipo={tipo}")
-        if n_clicks and tasa is not None and tipo is not None:
-            # Se prepara el payload para la llamada a la API (según el modelo)
-            payload = {"tasa": float(tasa), "tipo": tipo}
+    def convertir_tasas(calc_clicks, reset_clicks, tasa, tipo):
+        # Si no se ha clicado ningún botón, devolver estado inicial
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            return ["Ingrese los datos y presiona 'Calcular'", False, 0, None]
+        
+        # Identigicar qué botón fue clicado
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
-            try:
-                # Se llama a la API
-                response = requests.post("http://127.0.0.1:8000/convertir-tasas", json = payload)
-                
-                # Se procesa la respuesta
-                if response.status_code == 200:
-                    data = response.json()
-                    return html.Div([
-                        html.P(data.get("mensaje", "Conversión exitosa")),
-                        html.P(f"Tasa Diaria: {data.get('tasa_diaria')}%"),
-                        html.P(f"Tasa Mensual: {data.get('tasa_mensual')}%"),
-                        html.P(f"Tasa Anual: {data.get('tasa_anual')}%")
-                    ])
-                else:
-                    return f"Error: {response.status_code}"
+        if button_id == "btn-convertir" and calc_clicks > 0:
+            if tasa is not None and tipo is not None:
+                return ["Ingrese los datos y presiona 'Calcular'", True, tasa, tipo]
+            else:
+                # Se prepara el payload para la llamada a la API (según el modelo)
+                payload = {"tasa": float(tasa), "tipo": tipo}
 
-            except Exception as e:
-                return f"Error al conectar con el backend: {str(e)}"
-        return "Ingresa los datos y presiona 'convertir'"
+                try:
+                    # Se llama a la API
+                    response = requests.post(url_base + "/convertir-tasas", json = payload)
+                    
+                    # Se procesa la respuesta
+                    if response.status_code == 200:
+                        data = response.json()
+                        return html.Div([
+                            html.P(data.get("mensaje", "Conversión exitosa")),
+                            html.P(f"Tasa Diaria: {data.get('tasa_diaria')}%"),
+                            html.P(f"Tasa Mensual: {data.get('tasa_mensual')}%"),
+                            html.P(f"Tasa Anual: {data.get('tasa_anual')}%")
+                        ])
+                    else:
+                        return f"Error: {response.status_code}"
+                except Exception as e:
+                    return f"Error al conectar con el backend: {str(e)}"
+        elif button_id == "button-reset-ct" and reset_clicks > 0:
+            return ["Ingresa los datos y presiona 'convertir'", False, 0, None]
     
 def register_interes_compuesto_callbacks(app):
     @app.callback(
         [Output("output-interes-compuesto", "children"),
-         Output("error-alert-ic", "is_open")],
-        [Input("button-interes-compuesto", "n_clicks")],
-        [
-            State("input-capital", "value"),
-            State("input-tasa-interes", "value"),
-            State("input-plazo", "value"),
-            State("dropdown-interes-compuesto", "value")
-        ]
+         Output("error-alert-ic", "is_open"),
+         Output("input-capital", "value"),
+         Output("input-tasa-interes", "value"),
+         Output("input-plazo", "value"),
+         Output("dropdown-interes-compuesto", "value")],
+        [Input("button-interes-compuesto", "n_clicks"), 
+         Input("button-reset-ic", "n_clicks")],
+        [State("input-capital", "value"),
+         State("input-tasa-interes", "value"),
+         State("input-plazo", "value"),
+         State("dropdown-interes-compuesto", "value")]
     )
-    def calcular_interes_compuesto(n_clicks, capital, tasa, plazo, tipo):
-        print(f"Callback ejecutado con n_clicks={n_clicks}, capital={capital}, tasa={tasa}, plazo={plazo}, tipo={tipo}")
-        if n_clicks > 0:
-            if None in [capital, tasa, plazo] or any(x == 0 for x in [capital, tasa, plazo]):
-                return "Ingresa los datos y presiona 'Calcular'", True  # No muestra resultado y activa el Alert
+    def calcular_interes_compuesto(calc_clicks, reset_clicks, capital, tasa, plazo, tipo):
+        # Estado inicial cuando no se ha clicado ningún botón
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            return ["Ingrese los datos y presiona 'Calcular'", False, 0, 0, 0, None]
+        
+        # Identificar el botón clicado
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        # Lógica para el botón de cálculo
+        if button_id == "button-interes-compuesto" and calc_clicks > 0:
+            if None in [capital, tasa, plazo, tipo] or any(x == 0 for x in [capital, tasa, plazo]):
+                return ["Ingresa todos los datos correctamente", True, capital, tasa, plazo, tipo]
             else:
-                # Se prepara el payload para la llamada a la API (según el modelo)
+                # Preparar el payload para la API
                 payload = {
                     "capital": float(capital),
                     "tasa": float(tasa),
                     "plazo": float(plazo),
                     "tipo_tasa": tipo
                 }
-
                 try:
-                    # Se llama a la API
-                    response = requests.post("http://127.0.0.1:8000/interes-compuesto", json=payload)
+                    # Llamada a la API
+                    response = requests.post(url_base + "/interes-compuesto", json=payload)
                     if response.status_code == 200:
                         data = response.json()
-                        return html.Div([
-                            html.P(f"Capital Inical: {data.get('capital_inicial')}"),
+                        return [html.Div([
+                            html.P(f"Capital Inicial: {data.get('capital_inicial')}"),
                             html.P(f"Tasa Aplicada: {data.get('tasa_aplicada')}"),
                             html.P(f"Tasa Anual Equivalente: {data.get('tasa_anual_equivalente')}"),
                             html.P(f"Plazo: {data.get('plazo')}"),
                             html.P(f"Monto final: {data.get('monto_final')}"),
                             html.P(f"Ganancias: {data.get('ganancias')}"),
-                        ]), False  # Muestra resultado y desactiva el Alert
+                        ]), False, capital, tasa, plazo, tipo]
                     else:
-                        return f"Error: {response.status_code}", True
+                        return [f"Error: {response.status_code}", True, capital, tasa, plazo, tipo]
                 except Exception as e:
-                    return f"Error al conectar con el backend: {str(e)}", True
-        return "Ingresa los datos y presiona 'Calcular'", False
+                    return [f"Error al conectar con el backend: {str(e)}", True, capital, tasa, plazo, tipo]
+        
+        # Lógica para el botón de reset
+        elif button_id == "button-reset-ic" and reset_clicks > 0:
+            return ["Ingresa los datos y presiona 'Calcular'", False, 0, 0, 0, None]
+        
+        # Si no se cumple ninguna condición, no actualizar
+        return dash.no_update
 
 def register_lcoe_callbacks(app):
     @app.callback(
         [Output("output-lcoe", "children"),
-         Output("error-alert-lcoe", "is_open")],
-        [Input("button-lcoe", "n_clicks")],
-        [
-            State("input-capex", "value"),
-            State("input-opex", "value"),
-            State("input-annual-production", "value"),
-            State("input-discount-rate", "value"),
-            State("input-project-life", "value")
-        ]
+         Output("error-alert-lcoe", "is_open"),
+         Output("input-capex", "value"),
+         Output("input-opex", "value"),
+         Output("input-annual-production", "value"),
+         Output("input-discount-rate", "value"),
+         Output("input-project-life", "value")],
+
+        [Input("button-lcoe", "n_clicks"),
+         Input("button-reset-lcoe", "n_clicks")],
+
+        [State("input-capex", "value"),
+         State("input-opex", "value"),
+         State("input-annual-production", "value"),
+         State("input-discount-rate", "value"),
+         State("input-project-life", "value")]
     )
-    def calcular_lcoe(n_clicks, capex, opex, annual_production, discount_rate, project_life):
-        if n_clicks > 0:
+    def handle_lcoe_actions(calc_clicks, reset_clicks, capex, opex, annual_production, discount_rate, project_life):
+        # Si no se ha clicado ningún botón, devolver estado inicial
+        ctx = dash.callback_context
+        if not ctx.triggered:
+            return ["Ingresa los datos y presiona 'Calcular LCOE'", False, 0, 0, 0, 0, 0]
+
+        # Identificar qué botón fue clicado
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+        # Lógica para el botón de cálculo
+        if button_id == "button-lcoe" and calc_clicks > 0:
             if None in [capex, opex, annual_production, discount_rate, project_life] or any(x == 0 for x in [capex, opex, annual_production, discount_rate, project_life]):
-                return "Ingresa los datos y presiona 'Calcular LCOE", True  # No muestra resultado y activa el Alert
+                return ["Ingresa los datos y presiona 'Calcular LCOE'", True, capex, opex, annual_production, discount_rate, project_life]
             else:
                 payload = {
                     "capex": float(capex),
@@ -332,15 +417,21 @@ def register_lcoe_callbacks(app):
                     response = requests.post(url_base + "/lcoe", json=payload)
                     if response.status_code == 200:
                         data = response.json()
-                        return html.Div([
+                        return [html.Div([
                             html.P(data.get("mensaje", "LCOE calculado correctamente")),
-                        html.P(f"LCOE: {data.get('lcoe')} {data.get('unidad')}")
-                        ]), False
+                            html.P(f"LCOE: {data.get('lcoe')} {data.get('unidad')}")
+                        ]), False, capex, opex, annual_production, discount_rate, project_life]
                     else:
-                        return f"Error: {response.status_code}", True
+                        return [f"Error: {response.status_code}", True, capex, opex, annual_production, discount_rate, project_life]
                 except Exception as e:
-                    return f"Error al conectar con el backend: {str(e)}", True
-        return "Ingresa los datos y presiona 'Calcular LCOE'", False
+                    return [f"Error al conectar con el backend: {str(e)}", True, capex, opex, annual_production, discount_rate, project_life]
+
+        # Lógica para el botón de reset
+        elif button_id == "button-reset-lcoe" and reset_clicks > 0:
+            return ["Ingresa los datos y presiona 'Calcular LCOE'", False, 0, 0, 0, 0, 0]
+
+        # Si no se cumple ninguna condición, no actualizar
+        return dash.no_update
     
 def register_historial_lcoe_callbacks(app):
     @app.callback(
@@ -374,7 +465,8 @@ def register_historial_lcoe_callbacks(app):
                     table = dbc.Table(table_header + [html.Tbody(table_body)],
                                   bordered=True, 
                                   hover=True,
-                                  responsive=True)
+                                  responsive=True,
+                                  className="text-center")
                     return table
                 else:
                     return dbc.Alert("Error al cargar registros LCOE", color="danger")
@@ -415,7 +507,8 @@ def register_historial_interes_compuesto_callbacks(app):
                     table = dbc.Table(table_header + [html.Tbody(table_body)],
                                       bordered=True,
                                       hover=True,
-                                      responsive=True)
+                                      responsive=True,
+                                      className="text-center")
                     return table
                 else:
                     return dbc.Alert("Error al cargar registros Interés Compuesto", color="danger")
@@ -423,8 +516,7 @@ def register_historial_interes_compuesto_callbacks(app):
                 return dbc.Alert("Error al conectar con el backend: " + str(e), color="danger")
             
         # Si no esta la ruta /historial-interes-compuesto, se devuelve un mensaje
-        return html.P("No se encontró la ruta /historial-interes-compuesto")
-                        
+        return html.P("No se encontró la ruta /historial-interes-compuesto")                        
 
 
 # Función para registrar todos los callbacks

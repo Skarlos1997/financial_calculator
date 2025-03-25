@@ -126,7 +126,7 @@ def calcular_lcoe(request: LCOERequest, db: Session = Depends(get_db)):
     nuevo_calculo = LCOEDB(
         capex=capex, opex=opex,
         produccion_anual=produccion_anual, tasa_descuento=tasa_descuento,
-        vida_util=vida_util
+        vida_util=vida_util, lcoe=lcoe
     )
 
     db.add(nuevo_calculo)
@@ -182,6 +182,7 @@ def actualizar_lcoe(id: int, request: LCOERequest, db: Session = Depends(get_db)
     lcoe.produccion_anual = request.produccion_anual
     lcoe.tasa_descuento = request.tasa_descuento
     lcoe.vida_util = request.vida_util
+    lcoe.lcoe = calc_lcoe(request.capex, request.opex, request.produccion_anual, request.tasa_descuento, request.vida_util)
 
     db.commit()
     db.refresh(lcoe)

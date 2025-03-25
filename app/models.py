@@ -22,6 +22,7 @@ class LCOEDB(Base):
     produccion_anual = Column(Float, nullable=False)
     tasa_descuento = Column(Float, nullable=False)
     vida_util = Column(Integer, nullable=False)
+    lcoe = Column(Float, nullable=False)
 
 # Modelos de datos para la conversión de tasas
 class TipoTasa(str, Enum):
