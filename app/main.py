@@ -7,8 +7,12 @@ from calc_int_compu import *
 from database import SessionLocal, Base, engine
 from models import *
 
-app = FastAPI(title="Calculadora Financiera API", 
-              description="API para realizar cálculos financieros")
+app = FastAPI(
+    title="Calculadora Financiera API", 
+    description="API para realizar cálculos financieros",
+    )
+
+# uvicorn main:app --host 0.0.0.0 --port 8000
 
 # Función para obtener la sesión de la BD
 def get_db():

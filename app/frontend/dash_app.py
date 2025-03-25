@@ -96,9 +96,8 @@ app.layout = html.Div(
         html.Footer(
             dbc.Row(
                 [
-                    dbc.Col(html.P("© 2025 Mi Aplicación Financiera"), width=4),
-                    dbc.Col(html.P("Email: info@miaplicacionfinanciera.com"), width=4),
-                    dbc.Col(html.P("Teléfono: +1 234 567 890"), width=4),
+                    dbc.Col(html.P("© 2025 Financial calculator"), width=4),
+                    dbc.Col(html.P("Email: carlos.londono@utp.edu.co, manuel.martinez1@utp.edu.co"), width=8),
                 ],
                 justify="center",
                 align="center",

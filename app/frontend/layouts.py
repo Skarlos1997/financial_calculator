@@ -1,12 +1,12 @@
 import dash
 import requests
 import pandas as pd
-from dash import html, dcc
+from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
 # Definiendo la URL de la API
-url_base = "http://127.0.0.1:8000"
+url_base = "http://10.253.13.90:8000"
 
 # ------------------------------------------------------------------------------
 # Layouts
@@ -286,7 +286,8 @@ def register_conversion_tasa_callbacks(app):
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
         if button_id == "btn-convertir" and calc_clicks > 0:
-            if tasa is not None and tipo is not None:
+            calc_clicks = 0
+            if tasa is None or tipo is None:
                 return ["Ingrese los datos y presiona 'Calcular'", True, tasa, tipo]
             else:
                 # Se prepara el payload para la llamada a la API (según el modelo)
@@ -299,12 +300,14 @@ def register_conversion_tasa_callbacks(app):
                     # Se procesa la respuesta
                     if response.status_code == 200:
                         data = response.json()
-                        return html.Div([
+                        print(data)
+                        return [html.Div([
                             html.P(data.get("mensaje", "Conversión exitosa")),
                             html.P(f"Tasa Diaria: {data.get('tasa_diaria')}%"),
                             html.P(f"Tasa Mensual: {data.get('tasa_mensual')}%"),
                             html.P(f"Tasa Anual: {data.get('tasa_anual')}%")
-                        ])
+                        ]), False, tasa, tipo
+                        ]
                     else:
                         return f"Error: {response.status_code}"
                 except Exception as e:
@@ -452,21 +455,23 @@ def register_historial_lcoe_callbacks(app):
                     historial_lcoe_df = pd.DataFrame(data)
 
                     # Construyendo la tabla
-                    table_header = [
-                        html.Thead(html.Tr([html.Th(col) for col in historial_lcoe_df.columns]))
-                    ]
-                    table_body = []
-                    for _, row in historial_lcoe_df.iterrows():
-                        table_body.append(
-                        html.Tr([
-                            html.Td(row[col]) for col in historial_lcoe_df.columns
-                        ])
+                    
+                    table = dash_table.DataTable(
+                        # table_header + [html.Tbody(table_body)],
+                        id="historial-lcoe-table",
+                        columns= [ # {"name": i, "id": i} for i in historial_lcoe_df.columns],
+                            {'name': 'Producción anual', 'id': 'produccion_anual'},
+                            # {'name': 'id', 'id': 'id'},
+                            {'name': 'Vida util', 'id': 'vida_util'},
+                            {'name': 'OPEX', 'id': 'opex'},
+                            {'name': 'CAPEX', 'id': 'capex'},
+                            {'name': 'Tasa de descuento', 'id': 'tasa_descuento'},
+                            {'name': 'LCOE', 'id': 'lcoe'},
+                        ],
+                        data= historial_lcoe_df.to_dict("records"),
+                        editable=True,
+                        row_deletable=True,
                     )
-                    table = dbc.Table(table_header + [html.Tbody(table_body)],
-                                  bordered=True, 
-                                  hover=True,
-                                  responsive=True,
-                                  className="text-center")
                     return table
                 else:
                     return dbc.Alert("Error al cargar registros LCOE", color="danger")
@@ -474,6 +479,60 @@ def register_historial_lcoe_callbacks(app):
                 return dbc.Alert("Error al conectar con el backend: " + str(e), color="danger")
         # En caso de no encontrar la ruta /historial-lcoe, se devuelve un mensaje
         return html.P("No se encontró la ruta /historial-lcoe")
+
+def update_database_lcoe(app):
+    @app.callback(
+        Output("historial-lcoe-table", "data"),
+        [Input("historial-lcoe-table", "data_previous")],
+        [State("historial-lcoe-table", "data")],
+        prevent_initial_call=True,
+    )
+    def update_database_lcoe(data_previous, data):
+        if data_previous is not None and data is not None:
+            # Se obtiene la diferencia entre los dos conjuntos de datos
+            diff = [x for x in data if x not in data_previous]
+            # Si hay diferencias, se envía la información al backend
+            if diff:
+                # Se envía la información al backend por medio de una solicitud PUT
+                # se extrae el id del cambio
+                id = diff[0]['id']
+                json_database_lcoe = diff[0]
+                del(json_database_lcoe['id'])
+                del(json_database_lcoe['lcoe'])
+                # pasar la solicitud PUT
+                response = requests.put(url_base + f"/lcoe/{id}", json=json_database_lcoe)
+                if response.status_code == 200:
+                    # obtener data actualizada
+                    response = requests.get(url_base + "/lcoe-data")
+                    data = response.json()
+                    historial_lcoe_df = pd.DataFrame(data)
+                    data= historial_lcoe_df.to_dict("records")
+                    return data
+                else:
+                    return data_previous
+            else:
+                # encontrar si se ha eliminado una fila
+                size_previous = len(data_previous)
+                size_current = len(data)
+                if size_previous > size_current:
+                    # se extrae el id del cambio
+                    # Listar los id de los elementos
+                    id_previous = [x['id'] for x in data_previous]
+                    id_current = [x['id'] for x in data]
+                    id = [x for x in id_previous if x not in id_current][0]
+                    response = requests.delete(url_base + f"/lcoe/{id}")
+                    if response.status_code == 200:
+                        # obtener data actualizada
+                        response = requests.get(url_base + "/lcoe-data")
+                        data = response.json()
+                        historial_lcoe_df = pd.DataFrame(data)
+                        data= historial_lcoe_df.to_dict("records")
+                        return data
+                    else:
+                        return data_previous
+                return data_previous
+        else:
+            return data_previous
 
 def register_historial_interes_compuesto_callbacks(app):
     @app.callback(
@@ -494,21 +553,34 @@ def register_historial_interes_compuesto_callbacks(app):
                     historial_ic_df = pd.DataFrame(data)
 
                     # Contruyendo la tabla
-                    table_header = [
-                        html.Thead(html.Tr([html.Th(col) for col in historial_ic_df.columns]))
-                    ]
-                    table_body = []
-                    for _, row in historial_ic_df.iterrows():
-                        table_body.append(
-                            html.Tr([
-                                html.Td(row[col]) for col in historial_ic_df.columns
-                            ])
-                        )
-                    table = dbc.Table(table_header + [html.Tbody(table_body)],
-                                      bordered=True,
-                                      hover=True,
-                                      responsive=True,
-                                      className="text-center")
+                    # table_header = [
+                    #     html.Thead(html.Tr([html.Th(col) for col in historial_ic_df.columns]))
+                    # ]
+                    # table_body = []
+                    # for _, row in historial_ic_df.iterrows():
+                    #     table_body.append(
+                    #         html.Tr([
+                    #             html.Td(row[col]) for col in historial_ic_df.columns
+                    #         ])
+                    #     )
+                    table = dash_table.DataTable(
+                        id="historial-ic-table",
+                        columns= [ # {"name": i, "id": i} for i in historial_ic_df.columns],
+                            {'name': 'Capital inicial', 'id': 'capital'},
+                            {'name': 'Plazo', 'id': 'plazo'},
+                            {'name': 'Tasa de interés', 'id': 'tasa'},
+                            {'name': 'Monto final', 'id': 'monto_final'},
+                            {'name': 'Ganancias', 'id': 'ganancias'}
+                        ],
+                        data= historial_ic_df.to_dict("records"),
+                        editable=True,
+                        row_deletable=True,
+                    )
+                    # table = dbc.Table(table_header + [html.Tbody(table_body)],
+                    #                   bordered=True,
+                    #                   hover=True,
+                    #                   responsive=True,
+                    #                   className="text-center")
                     return table
                 else:
                     return dbc.Alert("Error al cargar registros Interés Compuesto", color="danger")
@@ -516,7 +588,65 @@ def register_historial_interes_compuesto_callbacks(app):
                 return dbc.Alert("Error al conectar con el backend: " + str(e), color="danger")
             
         # Si no esta la ruta /historial-interes-compuesto, se devuelve un mensaje
-        return html.P("No se encontró la ruta /historial-interes-compuesto")                        
+        return html.P("No se encontró la ruta /historial-interes-compuesto")        
+
+def update_database_interes_compuesto(app):
+    @app.callback(
+        Output("historial-ic-table", "data"),
+        [Input("historial-ic-table", "data_previous")],
+        [State("historial-ic-table", "data")],
+        prevent_initial_call=True,
+    )
+    def update_database_ic(data_previous, data):
+        if data_previous is not None and data is not None:
+            # Se obtiene la diferencia entre los dos conjuntos de datos
+            diff = [x for x in data if x not in data_previous]
+            # Si hay diferencias, se envía la información al backend
+            if diff:
+                # Se envía la información al backend por medio de una solicitud PUT
+                # se extrae el id del cambio
+                id = diff[0]['id']
+                json_database_ic = diff[0]
+                del(json_database_ic['id'])
+                del(json_database_ic['monto_final'])
+                del(json_database_ic['ganancias'])
+                json_database_ic['tipo_tasa'] = 'anual'
+                # pasar la solicitud PUT
+                response = requests.put(url_base + f"/interes-compuesto/{id}", json=json_database_ic)
+                if response.status_code == 200:
+                    # obtener data actualizada
+                    response = requests.get(url_base + "/interes-compuesto-data")
+                    data = response.json()
+                    historial_ic_df = pd.DataFrame(data)
+                    data= historial_ic_df.to_dict("records")
+                    return data
+                else:
+                    return data_previous
+            else:
+                # encontrar si se ha eliminado una fila
+                size_previous = len(data_previous)
+                size_current = len(data)
+                if size_previous > size_current:
+                    # se extrae el id del cambio
+                    # Listar los id de los elementos
+                    id_previous = [x['id'] for x in data_previous]
+                    id_current = [x['id'] for x in data]
+                    id = [x for x in id_previous if x not in id_current][0]
+                    response = requests.delete(url_base + f"/interes-compuesto/{id}")
+                    if response.status_code == 200:
+                        # obtener data actualizada
+                        response = requests.get(url_base + "/interes-compuesto-data")
+                        data = response.json()
+                        historial_ic_df = pd.DataFrame(data)
+                        data= historial_ic_df.to_dict("records")
+                        return data
+                    else:
+                        return data_previous
+                return data_previous
+        else:
+            return data_previous
+
+                
 
 
 # Función para registrar todos los callbacks
@@ -526,3 +656,5 @@ def register_all_callbacks(app):
     register_lcoe_callbacks(app)
     register_historial_lcoe_callbacks(app)
     register_historial_interes_compuesto_callbacks(app)
+    update_database_lcoe(app)
+    update_database_interes_compuesto(app)
