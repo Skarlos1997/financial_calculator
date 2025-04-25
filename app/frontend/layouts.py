@@ -6,7 +6,8 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
 # Definiendo la URL de la API
-url_base = "http://10.253.13.90:8000"
+# url_base = "http://10.253.13.90:8000"}
+url_base = "http://localhost:8000"
 
 # ------------------------------------------------------------------------------
 # Layouts
