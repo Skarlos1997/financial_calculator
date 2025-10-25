@@ -1,6 +1,7 @@
 import dash
 import requests
 import pandas as pd
+from calc_int_compu import *
 from dash import html, dcc, dash_table
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
@@ -32,9 +33,9 @@ def get_inicio_layout():
             html.P("Da el primer paso hacia tu futuro financiero: elige una opción y comienza a calcular.", style={"color": "#6c757d", "fontSize": "1.1em", "textAlign": "justify"}),
             dbc.Row(
                 [
-                    dbc.Col(dbc.Button("Calcular LCOE", color="primary", href="/lcoe"), width="auto"),
-                    dbc.Col(dbc.Button("Interés Compuesto", color="success", href="/interes-compuesto"), width="auto"),
-                    dbc.Col(dbc.Button("Convertir Tasas", color="info", href="/conversion-tasa"), width="auto"),
+                    dbc.Col(dbc.Button("Calcular LCOE", color="primary", href="/LCOE"), width="auto"),
+                    dbc.Col(dbc.Button("Interés Compuesto", color="success", href="/InteresCompuesto"), width="auto"),
+                    dbc.Col(dbc.Button("Convertir Tasas", color="info", href="/ConversionTasa"), width="auto"),
                 ],
                 justify="center",
                 className="mt-3"
@@ -55,31 +56,31 @@ def get_lcoe_layout():
             dbc.Col([
                 html.Label("CAPEX: ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
                 dcc.Input(id="input-capex", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
-                dbc.Tooltip("Incluye costos de adquisición de terrenos, equipos, construcción, ingeniería y otros gastos relacionados con la puesta en marcha del proyecto.", target="input-capex"),
+                # dbc.Tooltip("Incluye costos de adquisición de terrenos, equipos, construcción, ingeniería y otros gastos relacionados con la puesta en marcha del proyecto.", target="input-capex"),
             ], md=6),
             dbc.Col([
                 html.Label("OPEX: ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
                 dcc.Input(id="input-opex", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
-                dbc.Tooltip("Incluye costos de combustible, personal, mantenimiento, seguros, impuestos y otros gastos recurrentes.", target="input-opex"),
+                # dbc.Tooltip("Incluye costos de combustible, personal, mantenimiento, seguros, impuestos y otros gastos recurrentes.", target="input-opex"),
             ], md=6),
         ], className="mb-4"),
         dbc.Row([
             dbc.Col([
                 html.Label("Producción anual (MWh): ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
                 dcc.Input(id="input-annual-production", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
-                dbc.Tooltip("Es la cantidad de energía eléctrica que la planta genera en un año, medida en megavatios hora.", target="input-annual-production"),
+                # dbc.Tooltip("Es la cantidad de energía eléctrica que la planta genera en un año, medida en megavatios hora.", target="input-annual-production"),
             ], md=6),
             dbc.Col([
                 html.Label("Tasa de descuento: ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
                 dcc.Input(id="input-discount-rate", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
-                dbc.Tooltip("Representa el costo de oportunidad del capital y refleja el riesgo del proyecto.", target="input-discount-rate"),
+                # dbc.Tooltip("Representa el costo de oportunidad del capital y refleja el riesgo del proyecto.", target="input-discount-rate"),
             ], md=6),
         ], className="mb-4"),
         dbc.Row([
             dbc.Col([
                 html.Label("Plazo de vida de la planta en años: ", style={"fontWeight": "bold", "fontSize": "1.1em"}),
                 dcc.Input(id="input-project-life", type="number", value=0, className="form-control", style={"borderRadius": "5px"}),
-                dbc.Tooltip("Es el período de tiempo durante el cual se espera que la planta genere energía de manera eficiente.", target="input-project-life"),
+                # dbc.Tooltip("Es el período de tiempo durante el cual se espera que la planta genere energía de manera eficiente.", target="input-project-life"),
             ], md=6),
         ], className="mb-4"),
         dbc.Row([
@@ -410,26 +411,15 @@ def register_lcoe_callbacks(app):
             if None in [capex, opex, annual_production, discount_rate, project_life] or any(x == 0 for x in [capex, opex, annual_production, discount_rate, project_life]):
                 return ["Ingresa los datos y presiona 'Calcular LCOE'", True, capex, opex, annual_production, discount_rate, project_life]
             else:
-                payload = {
-                    "capex": float(capex),
-                    "opex": float(opex),
-                    "produccion_anual": float(annual_production),
-                    "tasa_descuento": float(discount_rate),
-                    "vida_util": float(project_life)
-                }
                 try:
-                    response = requests.post(url_base + "/lcoe", json=payload)
-                    if response.status_code == 200:
-                        data = response.json()
-                        return [html.Div([
-                            html.P(data.get("mensaje", "LCOE calculado correctamente")),
-                            html.P(f"LCOE: {data.get('lcoe')} {data.get('unidad')}")
+                    lcoe = calc_lcoe(capex, opex, annual_production, discount_rate, project_life)
+                    return [html.Div([
+                            html.P(f"El costo nivelado de la energía es {round(lcoe, 4)} $/MWh"),
+                            html.P(f"LCOE: {lcoe} $/MWh")
                         ]), False, capex, opex, annual_production, discount_rate, project_life]
-                    else:
-                        return [f"Error: {response.status_code}", True, capex, opex, annual_production, discount_rate, project_life]
                 except Exception as e:
                     return [f"Error al conectar con el backend: {str(e)}", True, capex, opex, annual_production, discount_rate, project_life]
-
+                
         # Lógica para el botón de reset
         elif button_id == "button-reset-lcoe" and reset_clicks > 0:
             return ["Ingresa los datos y presiona 'Calcular LCOE'", False, 0, 0, 0, 0, 0]
@@ -437,50 +427,6 @@ def register_lcoe_callbacks(app):
         # Si no se cumple ninguna condición, no actualizar
         return dash.no_update
     
-def register_historial_lcoe_callbacks(app):
-    @app.callback(
-        Output("tabla-lcoe", "children"),
-        [Input("url", "pathname")],
-    )
-    def obtener_historial_lcoe(pathname):
-        # Solo se cargará la tabla se estamos en /historial-lcoe
-        if pathname == "/historial-lcoe":
-            try:
-                response = requests.get(url_base + "/lcoe-data")
-                if response.status_code == 200:
-                    data = response.json()
-                    if not data:
-                        return html.P("No hay registros de LCOE en la base de datos.")
-                    
-                    # Convirtiendo el json en DataFrame
-                    historial_lcoe_df = pd.DataFrame(data)
-
-                    # Construyendo la tabla
-                    
-                    table = dash_table.DataTable(
-                        # table_header + [html.Tbody(table_body)],
-                        id="historial-lcoe-table",
-                        columns= [ # {"name": i, "id": i} for i in historial_lcoe_df.columns],
-                            {'name': 'Producción anual', 'id': 'produccion_anual'},
-                            # {'name': 'id', 'id': 'id'},
-                            {'name': 'Vida util', 'id': 'vida_util'},
-                            {'name': 'OPEX', 'id': 'opex'},
-                            {'name': 'CAPEX', 'id': 'capex'},
-                            {'name': 'Tasa de descuento', 'id': 'tasa_descuento'},
-                            {'name': 'LCOE', 'id': 'lcoe'},
-                        ],
-                        data= historial_lcoe_df.to_dict("records"),
-                        editable=True,
-                        row_deletable=True,
-                    )
-                    return table
-                else:
-                    return dbc.Alert("Error al cargar registros LCOE", color="danger")
-            except Exception as e:
-                return dbc.Alert("Error al conectar con el backend: " + str(e), color="danger")
-        # En caso de no encontrar la ruta /historial-lcoe, se devuelve un mensaje
-        return html.P("No se encontró la ruta /historial-lcoe")
-
 def update_database_lcoe(app):
     @app.callback(
         Output("historial-lcoe-table", "data"),
@@ -647,15 +593,12 @@ def update_database_interes_compuesto(app):
         else:
             return data_previous
 
-                
-
 
 # Función para registrar todos los callbacks
 def register_all_callbacks(app):
     register_conversion_tasa_callbacks(app)
     register_interes_compuesto_callbacks(app)
     register_lcoe_callbacks(app)
-    register_historial_lcoe_callbacks(app)
     register_historial_interes_compuesto_callbacks(app)
     update_database_lcoe(app)
     update_database_interes_compuesto(app)

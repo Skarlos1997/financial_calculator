@@ -57,25 +57,13 @@ app.layout = html.Div(
                     dark=True,
                     children=[
                         dbc.NavItem(dbc.NavLink("Inicio", href="/", active="exact"), id = "nav-inicio"),
-                        dbc.Tooltip("Ir a la página principal",target = "nav-inicio"),
-                        dbc.NavItem(dbc.NavLink("LCOE", href="/lcoe", active="exact"), id = "nav-lcoe"),
-                        dbc.Tooltip("Ir a la página de LCOE",target = "nav-lcoe"),
-                        dbc.NavItem(dbc.NavLink("Interés Compuesto", href="/interes-compuesto", active="exact"), id = "nav-interes-compuesto"),
-                        dbc.Tooltip("Ir a la página de interés compuesto",target = "nav-interes-compuesto"),
-                        dbc.NavItem(dbc.NavLink("Conversión Tasa de Interes", href="/conversion_tasa", active="exact"), id = "nav-conversion-tasa"),
-                        dbc.Tooltip("Ir a la página de conversión tasa de interés",target = "nav-conversion-tasa"),
-                        dbc.DropdownMenu(
-                            label = "Historial",
-                            nav = True, # indicando que es un componente del Nav
-                            in_navbar = True, # indicando que se encuentra en la barra de navegación
-                            align_end=True,
-                            children = [
-                                dbc.DropdownMenuItem("Hisotial de LCOE", href = "/historial-lcoe"),
-                                dbc.DropdownMenuItem("Historial de Interés Compuesto", href = "/historial-interes-compuesto")
-                            ],
-                            id = "nav-historial",
-                        ),
-                        dbc.Tooltip("Ir a la página de historial",target = "nav-historial")
+                        # dbc.Tooltip("Ir a la página principal",target = "nav-inicio"),
+                        dbc.NavItem(dbc.NavLink("LCOE", href="/LCOE", active="exact"), id = "nav-lcoe"),
+                        # dbc.Tooltip("Ir a la página de LCOE",target = "nav-lcoe"),
+                        dbc.NavItem(dbc.NavLink("Interés Compuesto", href="/InteresCompuesto", active="exact"), id = "nav-interes-compuesto"),
+                        # dbc.Tooltip("Ir a la página de interés compuesto",target = "nav-interes-compuesto"),
+                        dbc.NavItem(dbc.NavLink("Conversión Tasa de Interes", href="/ConversionTasa", active="exact"), id = "nav-conversion-tasa"),
+                        # dbc.Tooltip("Ir a la página de conversión tasa de interés",target = "nav-conversion-tasa"),
                     ],
                     style={"fontFamily": "Arial"}
                 ),
@@ -132,16 +120,12 @@ app.layout = html.Div(
 def render_page_content(pathname):
     if pathname == "/":
         return inicio_layout
-    elif pathname == "/lcoe":
+    elif pathname == "/LCOE":
         return lcoe_layout
-    elif pathname == "/interes-compuesto":
+    elif pathname == "/InteresCompuesto":
         return interes_compuesto_layout
-    elif  pathname == "/conversion_tasa":
+    elif  pathname == "/ConversionTasa":
         return conversion_tasa_layout
-    elif pathname == "/historial-lcoe":
-        return historial_lcoe_layout
-    elif pathname == "/historial-interes-compuesto":
-        return historial_interes_compuesto_layout
     else:
         return dbc.Alert("Página no encontrada.", color="danger")
 
