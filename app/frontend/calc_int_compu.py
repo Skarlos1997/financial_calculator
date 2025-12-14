@@ -168,8 +168,10 @@ def calc_lcoe(cap, ope, energy, r, n):
         # Sumar la producción de cada año 
         if t != 0:
             produccion_descontada += energy/f_desc
-
+    # Cálculo del LCOE
     lcoe = costos_descontados/produccion_descontada
+    # reducir a 4 decimales
+    lcoe = round(lcoe, 4)
     return lcoe
 
 

@@ -117,13 +117,13 @@ def get_interes_compuesto_layout():
                     dbc.Col([
                         html.Label("Capital inicial: ", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
                         dcc.Input(id = "input-capital", type = "number", value=0, className="form-control", style={"borderRadius": "5px"}),
-                        dbc.Tooltip("Es la cantidad de dinero que inviertes o depositas al principio.",target = "input-capital"),
+                        # dbc.Tooltip("Es la cantidad de dinero que inviertes o depositas al principio.",target = "input-capital"),
                     ], md = 6),
 
                     dbc.Col([
                         html.Label("Tasa de interés: ", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
                         dcc.Input(id = "input-tasa-interes", type = "number", value=0, className="form-control", style={"borderRadius": "5px"}),
-                        dbc.Tooltip("Es el porcentaje que te pagan por tu dinero durante un período de tiempo.",target = "input-tasa-interes"),
+                        # dbc.Tooltip("Es el porcentaje que te pagan por tu dinero durante un período de tiempo.",target = "input-tasa-interes"),
                     ], md = 6),
                 ], className="mb-4"),
 
@@ -131,7 +131,7 @@ def get_interes_compuesto_layout():
                     dbc.Col([
                         html.Label("Plazo en periodos (años o meses o días): ", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
                         dcc.Input(id = "input-plazo", type = "number", value=0, className="form-control", style={"borderRadius": "5px"}),
-                        dbc.Tooltip("Es el tiempo que dejas tu dinero invertido.",target = "input-plazo"),
+                        # dbc.Tooltip("Es el tiempo que dejas tu dinero invertido.",target = "input-plazo"),
                     ], md = 6),
 
                     dbc.Col([
@@ -151,7 +151,7 @@ def get_interes_compuesto_layout():
                             'border': '1px solid #ced4da'
                         }
                         ),
-                        dbc.Tooltip("Indica con qué frecuencia se añade el interés a tu capital, y esto afecta a la rapidez con la que crece tu dinero.",target = "dropdown-interes-compuesto"),
+                        # dbc.Tooltip("Indica con qué frecuencia se añade el interés a tu capital, y esto afecta a la rapidez con la que crece tu dinero.",target = "dropdown-interes-compuesto"),
                     ], md = 6, className="form-group"),
                 ], className = "mb-4"),
 
@@ -187,7 +187,7 @@ def get_conversion_tasa_layout():
                 dbc.Col([
                     html.Label("Tasa (%)", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
                     dcc.Input(id = "input-tasa", type = "number", placeholder = "Ingresa la tasa", debounce = True, className="form-control", style={"borderRadius": "5px"}),
-                    dbc.Tooltip("""Representa el "precio" del dinero, es decir, lo que se paga por usarlo (si pides un préstamo) o lo que se gana por prestarlo o invertirlo (si tienes un depósito o inversión).""",target = "input-tasa"),
+                    # dbc.Tooltip("""Representa el "precio" del dinero, es decir, lo que se paga por usarlo (si pides un préstamo) o lo que se gana por prestarlo o invertirlo (si tienes un depósito o inversión).""",target = "input-tasa"),
                 ],md = 6),
                 dbc.Col([
                     html.Label("Tipo de tasa", style={"fontWeight": "bold", "fontSize": "1.1em", "color": "#343a40"}),
@@ -206,7 +206,7 @@ def get_conversion_tasa_layout():
                             'border': '1px solid #ced4da'
                         }
                     ),
-                    dbc.Tooltip("Se refiere a la frecuencia con la que se calcula y aplica el interés a tu capital.",target = "dropdown"),
+                    # dbc.Tooltip("Se refiere a la frecuencia con la que se calcula y aplica el interés a tu capital.",target = "dropdown"),
                 ],md = 6, className="form-group")
             ], className = "mb-4"),
 
@@ -292,28 +292,48 @@ def register_conversion_tasa_callbacks(app):
             if tasa is None or tipo is None:
                 return ["Ingrese los datos y presiona 'Calcular'", True, tasa, tipo]
             else:
-                # Se prepara el payload para la llamada a la API (según el modelo)
-                payload = {"tasa": float(tasa), "tipo": tipo}
-
-                try:
-                    # Se llama a la API
-                    response = requests.post(url_base + "/convertir-tasas", json = payload)
-                    
-                    # Se procesa la respuesta
-                    if response.status_code == 200:
-                        data = response.json()
-                        print(data)
-                        return [html.Div([
-                            html.P(data.get("mensaje", "Conversión exitosa")),
-                            html.P(f"Tasa Diaria: {data.get('tasa_diaria')}%"),
-                            html.P(f"Tasa Mensual: {data.get('tasa_mensual')}%"),
-                            html.P(f"Tasa Anual: {data.get('tasa_anual')}%")
-                        ]), False, tasa, tipo
-                        ]
-                    else:
-                        return f"Error: {response.status_code}"
-                except Exception as e:
-                    return f"Error al conectar con el backend: {str(e)}"
+                # Cálculo local sin llamar a la API
+                if tipo == "anual":
+                    tasa_diaria = tea_ted(tasa)
+                    tasa_mensual = tea_tem(tasa)
+                    tasa_anual = round(tasa, 4)
+                elif tipo == "mensual":
+                    tasa_anual = tem_tea(tasa)
+                    tasa_diaria = tea_ted(tasa_anual)
+                    tasa_mensual = round(tasa, 4)
+                elif tipo == "diario":
+                    tasa_anual = ted_tea(tasa)
+                    tasa_mensual = tea_tem(tasa_anual)
+                    tasa_diaria = round(tasa, 4)
+                else:
+                    return f"Error: {tipo} no coincide con ninguno", True, tasa, tipo
+                return [html.Div([
+                    html.P("Conversión exitosa"),
+                    html.P(f"Tasa Diaria: {round(tasa_diaria, 8)}%"),
+                    html.P(f"Tasa Mensual: {round(tasa_mensual, 8)}%"),
+                    html.P(f"Tasa Anual: {round(tasa_anual, 8)}%")
+                ]), False, tasa, tipo
+                ]
+                # # Se prepara el payload para la llamada a la API (según el modelo)
+                # payload = {"tasa": float(tasa), "tipo": tipo}
+                # try:
+                #     # Se llama a la API
+                #     response = requests.post(url_base + "/convertir-tasas", json = payload)
+                #     # Se procesa la respuesta
+                #     if response.status_code == 200:
+                #         data = response.json()
+                #         print(data)
+                #         return [html.Div([
+                #             html.P(data.get("mensaje", "Conversión exitosa")),
+                #             html.P(f"Tasa Diaria: {data.get('tasa_diaria')}%"),
+                #             html.P(f"Tasa Mensual: {data.get('tasa_mensual')}%"),
+                #             html.P(f"Tasa Anual: {data.get('tasa_anual')}%")
+                #         ]), False, tasa, tipo
+                #         ]
+                #     else:
+                #         return f"Error: {response.status_code}"
+                # except Exception as e:
+                #     return f"Error al conectar con el backend: {str(e)}"
         elif button_id == "button-reset-ct" and reset_clicks > 0:
             return ["Ingresa los datos y presiona 'convertir'", False, 0, None]
     
@@ -346,30 +366,39 @@ def register_interes_compuesto_callbacks(app):
             if None in [capital, tasa, plazo, tipo] or any(x == 0 for x in [capital, tasa, plazo]):
                 return ["Ingresa todos los datos correctamente", True, capital, tasa, plazo, tipo]
             else:
-                # Preparar el payload para la API
-                payload = {
-                    "capital": float(capital),
-                    "tasa": float(tasa),
-                    "plazo": float(plazo),
-                    "tipo_tasa": tipo
-                }
-                try:
-                    # Llamada a la API
-                    response = requests.post(url_base + "/interes-compuesto", json=payload)
-                    if response.status_code == 200:
-                        data = response.json()
-                        return [html.Div([
-                            html.P(f"Capital Inicial: {data.get('capital_inicial')}"),
-                            html.P(f"Tasa Aplicada: {data.get('tasa_aplicada')}"),
-                            html.P(f"Tasa Anual Equivalente: {data.get('tasa_anual_equivalente')}"),
-                            html.P(f"Plazo: {data.get('plazo')}"),
-                            html.P(f"Monto final: {data.get('monto_final')}"),
-                            html.P(f"Ganancias: {data.get('ganancias')}"),
-                        ]), False, capital, tasa, plazo, tipo]
-                    else:
-                        return [f"Error: {response.status_code}", True, capital, tasa, plazo, tipo]
-                except Exception as e:
-                    return [f"Error al conectar con el backend: {str(e)}", True, capital, tasa, plazo, tipo]
+                # Cálculo local sin llamar a la API
+                resultado = calc_interes(capital, tasa, plazo)
+                return [html.Div([
+                    html.P(f"Capital Inicial: {round(capital, 4)}"),
+                    html.P(f"Tasa Aplicada: {tasa}% ({tipo})"),
+                    html.P(f"Plazo: {plazo} períodos"),
+                    html.P(f"Monto final: {round(resultado, 4)}"),
+                    html.P(f"Ganancias: {round(resultado - capital, 4)}"),
+                ]), False, capital, tasa, plazo, tipo]
+                # # Preparar el payload para la API
+                # payload = {
+                #     "capital": float(capital),
+                #     "tasa": float(tasa),
+                #     "plazo": float(plazo),
+                #     "tipo_tasa": tipo
+                # }
+                # try:
+                #     # Llamada a la API
+                #     response = requests.post(url_base + "/interes-compuesto", json=payload)
+                #     if response.status_code == 200:
+                #         data = response.json()
+                #         return [html.Div([
+                #             html.P(f"Capital Inicial: {data.get('capital_inicial')}"),
+                #             html.P(f"Tasa Aplicada: {data.get('tasa_aplicada')}"),
+                #             html.P(f"Tasa Anual Equivalente: {data.get('tasa_anual_equivalente')}"),
+                #             html.P(f"Plazo: {data.get('plazo')}"),
+                #             html.P(f"Monto final: {data.get('monto_final')}"),
+                #             html.P(f"Ganancias: {data.get('ganancias')}"),
+                #         ]), False, capital, tasa, plazo, tipo]
+                #     else:
+                #         return [f"Error: {response.status_code}", True, capital, tasa, plazo, tipo]
+                # except Exception as e:
+                #     return [f"Error al conectar con el backend: {str(e)}", True, capital, tasa, plazo, tipo]
         
         # Lógica para el botón de reset
         elif button_id == "button-reset-ic" and reset_clicks > 0:
@@ -415,7 +444,7 @@ def register_lcoe_callbacks(app):
                     lcoe = calc_lcoe(capex, opex, annual_production, discount_rate, project_life)
                     return [html.Div([
                             html.P(f"El costo nivelado de la energía es {round(lcoe, 4)} $/MWh"),
-                            html.P(f"LCOE: {lcoe} $/MWh")
+                            html.P(f"LCOE: {round(lcoe, 8)} $/MWh")
                         ]), False, capex, opex, annual_production, discount_rate, project_life]
                 except Exception as e:
                     return [f"Error al conectar con el backend: {str(e)}", True, capex, opex, annual_production, discount_rate, project_life]

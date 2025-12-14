@@ -1,12 +1,11 @@
 import dash
-import requests
-from dash import html, dcc, Input, Output, State, callback_context
 import plotly.express as px
 import pandas as pd  # Para manipulación de datos
 import numpy as np  # Para operaciones numéricas
 import dash_bootstrap_components as dbc  # Bootstrap components para mejorar la interfaz
 # Importa las funciones de layouts y callbacks
-from layouts import get_inicio_layout, get_lcoe_layout, get_interes_compuesto_layout, get_conversion_tasa_layout, get_historial_lcoe_layout, get_historial_interes_compuesto_layout,register_all_callbacks
+from dash import html, dcc, Input, Output, State, callback_context
+from .layouts import get_inicio_layout, get_lcoe_layout, get_interes_compuesto_layout, get_conversion_tasa_layout, get_historial_lcoe_layout, get_historial_interes_compuesto_layout,register_all_callbacks
 
 # ==============================================================================
 # Inicializar la aplicación Dash con un tema de Bootstrap
